@@ -176,10 +176,21 @@ class Worker {
 }
 
 const worker = new Worker();
-worker.start().catch((err) => {
-  console.error('Worker failed to start:', err);
+async function startWorkerWithRetry(retries = 15) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await worker.start();
+      return;
+    } catch (err) {
+      console.error(`Worker failed to start (attempt ${i + 1}/${retries}):`, err.message);
+      await sleep(2000); // wait 2 seconds
+    }
+  }
+  console.error('Worker exhausted all startup retries. Exiting.');
   process.exit(1);
-});
+}
+
+startWorkerWithRetry();
 
 for (const sig of ['SIGTERM', 'SIGINT']) {
   process.on(sig, async () => {
