@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scheduler // Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="auth-brand-mark">&gt;_</span>
+      <div>
+        <div class="auth-brand-name">Scheduler</div>
+        <div class="auth-brand-sub">distributed job control</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Sign in</button>
+      <button class="auth-tab" data-tab="register">Create account</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <label>Email<input type="email" id="login-email" required placeholder="you@company.com" /></label>
+      <label>Password<input type="password" id="login-password" required placeholder="••••••••" /></label>
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+      <p class="auth-error" id="login-error"></p>
+    </form>
+
+    <form id="register-form" class="auth-form hidden">
+      <label>Name<input type="text" id="register-name" required placeholder="Ada Lovelace" /></label>
+      <label>Email<input type="email" id="register-email" required placeholder="you@company.com" /></label>
+      <label>Password<input type="password" id="register-password" required minlength="8" placeholder="min. 8 characters" /></label>
+      <button type="submit" class="btn btn-primary btn-block">Create account</button>
+      <p class="auth-error" id="register-error"></p>
+    </form>
+
+    <p class="auth-footnote">Jobs get in, work gets out. Every claim is atomic — no job ever runs twice by accident.</p>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="app-shell" class="app-shell hidden">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">&gt;_</span>
+      <span class="brand-name">Scheduler</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="overview"><span class="nav-icon">◧</span>Overview</button>
+      <button class="nav-item" data-view="queues"><span class="nav-icon">☰</span>Queues</button>
+      <button class="nav-item" data-view="workers"><span class="nav-icon">◔</span>Workers</button>
+      <button class="nav-item" data-view="dlq"><span class="nav-icon">☠</span>Dead Letters</button>
+      <button class="nav-item" data-view="schedules"><span class="nav-icon">◷</span>Recurring</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="ws-indicator" id="ws-indicator"><span class="ws-dot"></span><span id="ws-label">connecting…</span></div>
+      <button class="btn-ghost btn-block" id="logout-btn">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar">
+      <div class="topbar-left">
+        <label class="project-select-label">Project</label>
+        <select id="project-select" class="project-select"></select>
+        <button class="btn-ghost btn-sm" id="new-project-btn">+ New project</button>
+      </div>
+      <div class="topbar-right">
+        <div class="api-key-chip" id="api-key-chip" title="Click to copy">
+          <span class="chip-label">API key</span>
+          <code id="api-key-value">—</code>
+        </div>
+        <span class="user-chip" id="user-chip"></span>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+
+      <!-- ============ OVERVIEW ============ -->
+      <section class="view" id="view-overview">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">0</div></div>
+          <div class="stat-card"><div class="stat-label">Running</div><div class="stat-value accent-running" id="stat-running">0</div></div>
+          <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value accent-completed" id="stat-completed">0</div></div>
+          <div class="stat-card"><div class="stat-label">Dead-lettered</div><div class="stat-value accent-dead" id="stat-dead">0</div></div>
+          <div class="stat-card"><div class="stat-label">Online workers</div><div class="stat-value" id="stat-workers">0</div></div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel panel-chart">
+            <div class="panel-title">Throughput — last 24h</div>
+            <canvas id="throughput-chart" height="90"></canvas>
+          </div>
+
+          <div class="panel panel-stream">
+            <div class="panel-title">Live job stream <span class="live-pulse"></span></div>
+            <div class="stream" id="job-stream">
+              <div class="stream-line stream-muted">$ waiting for events…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Queue health</div>
+          <table class="data-table" id="health-table">
+            <thead><tr><th>Queue</th><th>Pending</th><th>Running</th><th>Dead-lettered</th><th>Avg duration</th><th>State</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ QUEUES ============ -->
+      <section class="view hidden" id="view-queues">
+        <div class="view-header">
+          <h2>Queues</h2>
+          <button class="btn btn-primary btn-sm" id="new-queue-btn">+ New queue</button>
+        </div>
+        <div class="queue-grid" id="queue-grid"></div>
+
+        <div class="panel" id="jobs-panel" style="display:none;">
+          <div class="panel-title-row">
+            <div class="panel-title" id="jobs-panel-title">Jobs</div>
+            <div class="jobs-actions">
+              <select id="jobs-status-filter">
+                <option value="">All statuses</option>
+                <option value="queued">Queued</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="claimed">Claimed</option>
+                <option value="running">Running</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="dead_letter">Dead letter</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="new-job-btn">+ New job</button>
+            </div>
+          </div>
+          <table class="data-table" id="jobs-table">
+            <thead><tr><th>Name</th><th>Status</th><th>Priority</th><th>Attempts</th><th>Run at</th><th>Updated</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ WORKERS ============ -->
+      <section class="view hidden" id="view-workers">
+        <div class="view-header"><h2>Workers</h2></div>
+        <table class="data-table" id="workers-table">
+          <thead><tr><th>Host</th><th>Status</th><th>Queues</th><th>Concurrency</th><th>Active jobs</th><th>Last seen</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- ============ DLQ ============ -->
+      <section class="view hidden" id="view-dlq">
+        <div class="view-header"><h2>Dead Letter Queue</h2><p class="view-sub">Jobs that exhausted all retries. Inspect the failure, fix the cause, then replay.</p></div>
+        <table class="data-table" id="dlq-table">
+          <thead><tr><th>Job</th><th>Queue</th><th>Attempts</th><th>Failure reason</th><th>Moved at</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- ============ SCHEDULES ============ -->
+      <section class="view hidden" id="view-schedules">
+        <div class="view-header">
+          <h2>Recurring jobs</h2>
+          <button class="btn btn-primary btn-sm" id="new-schedule-btn">+ New schedule</button>
+        </div>
+        <p class="view-sub">Cron-style templates. Each firing spawns a concrete job on its target queue.</p>
+        <table class="data-table" id="schedules-table">
+          <thead><tr><th>Name</th><th>Queue</th><th>Cron</th><th>Next run</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+<div class="modal-backdrop hidden" id="modal-backdrop">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
