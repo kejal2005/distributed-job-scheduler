@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Distributed Job Scheduler — Submission Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --text: #1a1a2e;
+    --text-secondary: #4a4a6a;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --border: #e2e8f0;
+    --bg-code: #f8fafc;
+    --bg-table-header: #f1f5f9;
+    --success: #059669;
+    --warning: #d97706;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    margin: 1.8cm 2cm;
+    size: A4;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 11pt;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 40px 50px;
+    background: white;
+  }
+
+  /* ── COVER HEADER ── */
+  .cover {
+    text-align: center;
+    padding: 50px 0 30px;
+    border-bottom: 3px solid var(--accent);
+    margin-bottom: 30px;
+    page-break-after: avoid;
+  }
+  .cover h1 {
+    font-size: 28pt;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .cover .subtitle {
+    font-size: 13pt;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 24px;
+  }
+  .cover .meta {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    font-size: 9.5pt;
+    color: var(--text-secondary);
+  }
+  .cover .meta a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .cover .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cover .meta-label {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── HEADINGS ── */
+  h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 36px;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent);
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 22px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+
+  /* ── TEXT ── */
+  p { margin-bottom: 10px; }
+  strong { font-weight: 600; }
+
+  ul, ol {
+    margin: 8px 0 12px 20px;
+  }
+  li { margin-bottom: 4px; }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9pt;
+    background: var(--bg-code);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    color: #c7254e;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.5pt;
+    line-height: 1.6;
+    margin: 10px 0 16px;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: var(--bg-table-header);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  /* ── SPECIAL BLOCKS ── */
+  .arch-diagram {
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 18px 22px;
+    border-radius: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8pt;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 14px 0 20px;
+    page-break-inside: avoid;
+  }
+  .arch-diagram .highlight { color: #38bdf8; }
+  .arch-diagram .accent { color: #a78bfa; }
+  .arch-diagram .green { color: #4ade80; }
+
+  .callout {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  .callout-title {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: 600;
+  }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+
+  /* ── TOC ── */
+  .toc {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 28px;
+    margin: 20px 0 30px;
+    page-break-inside: avoid;
+  }
+  .toc-title {
+    font-weight: 700;
+    font-size: 11pt;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+    margin: 0;
+    padding: 0;
+  }
+  .toc li {
+    counter-increment: toc;
+    padding: 3px 0;
+    font-size: 10pt;
+  }
+  .toc li::before {
+    content: counter(toc) ".";
+    font-weight: 600;
+    color: var(--accent);
+    margin-right: 8px;
+    display: inline-block;
+    width: 22px;
+  }
+
+  /* ── SECTION NUMBERS ── */
+  .section-num {
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    body { padding: 0; }
+    .cover { padding-top: 30px; }
+    h2 { margin-top: 28px; }
+    .no-break { page-break-inside: avoid; }
+  }
+
+  .dir-tree {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.5pt;
+    line-height: 1.6;
+    margin: 10px 0 16px;
+    page-break-inside: avoid;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 30px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ COVER ════════════════════ -->
+<div class="cover">
+  <h1>Distributed Job Scheduler</h1>
+  <div class="subtitle">Intern Assignment — Submission Report</div>
+  <div class="meta">
+    <div class="meta-item"><span class="meta-label">Author:</span> Harsh Jain</div>
+    <div class="meta-item"><span class="meta-label">GitHub:</span> <a href="https://github.com/kejal2005/distributed-job-scheduler">kejal2005/distributed-job-scheduler</a></div>
+    <div class="meta-item"><span class="meta-label">Live Demo:</span> <a href="https://distributed-job-scheduler-psi.vercel.app">distributed-job-scheduler-psi.vercel.app</a></div>
+  </div>
+</div>
+
+<!-- ════════════════════ TOC ════════════════════ -->
+<div class="toc">
+  <div class="toc-title">Table of Contents</div>
+  <ol>
+    <li>Executive Summary</li>
+    <li>System Architecture</li>
+    <li>Database Design</li>
+    <li>Backend Engineering</li>
+    <li>Reliability & Concurrency</li>
+    <li>Frontend & UX</li>
+    <li>API Reference</li>
+    <li>Design Decisions & Trade-offs</li>
+    <li>Testing Strategy</li>
+    <li>Deployment & Infrastructure</li>
+    <li>Setup Instructions</li>
+    <li>Bonus Features</li>
+  </ol>
+</div>
+
+<!-- ════════════════════ 1. EXECUTIVE SUMMARY ════════════════════ -->
+<h2><span class="section-num">1.</span> Executive Summary</h2>
+
+<p>This project is a production-grade distributed job scheduling platform that reliably processes asynchronous background jobs across multiple worker nodes. The system is modeled after real-world platforms like Sidekiq, BullMQ, and GitHub Actions — it provides multi-tenant project isolation, atomic job claiming with PostgreSQL row-level locks, configurable retry strategies with dead-letter support, cron-based recurring jobs, and a live operations dashboard powered by WebSockets.</p>
+
+<p>The architecture is split into three independently deployable components:</p>
+<ul>
+  <li>A <strong>Control Plane</strong> (REST API) that handles authentication, job ingestion, queue management, and worker coordination</li>
+  <li>A <strong>Worker Service</strong> that polls the Control Plane, claims jobs atomically, and executes them concurrently</li>
+  <li>A <strong>Frontend Dashboard</strong> that provides real-time observability into the entire system</li>
+</ul>
+
+<p>All three are deployed to production and verified end-to-end from a mobile device over cellular data — confirming zero localhost dependency.</p>
+
+<!-- ════════════════════ 2. ARCHITECTURE ════════════════════ -->
+<h2><span class="section-num">2.</span> System Architecture</h2>
+
+<div class="arch-diagram"><span class="highlight">┌─────────────────────────────────────────────────────────────────────┐</span>
+<span class="highlight">│</span>                        <span class="green">FRONTEND (Vercel)</span>                            <span class="highlight">│</span>
+<span class="highlight">│</span>   Vanilla HTML/CSS/JS  •  Chart.js  •  WebSocket client             <span class="highlight">│</span>
+<span class="highlight">│</span>   Views: Overview, Queues, Workers, Dead Letters, Recurring          <span class="highlight">│</span>
+<span class="highlight">└─────────────┬───────────────────────────────────┬───────────────────┘</span>
+              │ REST (HTTPS)                      │ WebSocket (WSS)
+              ▼                                   ▼
+<span class="accent">┌─────────────────────────────────────────────────────────────────────┐</span>
+<span class="accent">│</span>                    <span class="green">CONTROL PLANE (Render)</span>                            <span class="accent">│</span>
+<span class="accent">│</span>                                                                     <span class="accent">│</span>
+<span class="accent">│</span>  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────────┐  <span class="accent">│</span>
+<span class="accent">│</span>  │  Express API  │  │  WS Hub      │  │  Cron Scheduler           │  <span class="accent">│</span>
+<span class="accent">│</span>  │  (REST)       │  │  (broadcast) │  │  (polls scheduled_jobs)   │  <span class="accent">│</span>
+<span class="accent">│</span>  └──────┬───────┘  └──────────────┘  └───────────────────────────┘  <span class="accent">│</span>
+<span class="accent">│</span>         │                                                           <span class="accent">│</span>
+<span class="accent">│</span>  ┌──────┴────────────────────────────────────────────────────────┐  <span class="accent">│</span>
+<span class="accent">│</span>  │  JWT auth • API key auth • Zod validation • Rate limiting    │  <span class="accent">│</span>
+<span class="accent">│</span>  └───────────────────────────────────────────────────────────────┘  <span class="accent">│</span>
+<span class="accent">└─────────────┬───────────────────────────────────────────────────────┘</span>
+              │ SQL (pg driver, connection pool max=20)
+              ▼
+<span class="highlight">┌─────────────────────────────────────────────────────────────────────┐</span>
+<span class="highlight">│</span>                  <span class="green">POSTGRESQL 16 (Render)</span>                              <span class="highlight">│</span>
+<span class="highlight">│</span>  12 tables • 15 indexes • 3 triggers • 7 ENUM types                <span class="highlight">│</span>
+<span class="highlight">│</span>  FOR UPDATE SKIP LOCKED for atomic claiming                         <span class="highlight">│</span>
+<span class="highlight">└─────────────────────────────────────────────────────────────────────┘</span>
+              ▲
+              │ REST (HTTPS) — workers are API clients, not DB clients
+<span class="accent">┌─────────────┴───────────────────────────────────────────────────────┐</span>
+<span class="accent">│</span>                   <span class="green">WORKER SERVICE(S)</span>                                  <span class="accent">│</span>
+<span class="accent">│</span>  Polls /claim endpoint • Concurrent execution • Heartbeats (5s)    <span class="accent">│</span>
+<span class="accent">│</span>  Graceful shutdown on SIGTERM/SIGINT • Horizontally scalable       <span class="accent">│</span>
+<span class="accent">└─────────────────────────────────────────────────────────────────────┘</span></div>
+
+<div class="callout">
+  <div class="callout-title">Key Design Choice</div>
+  Workers communicate via REST, not direct database access. They authenticate with a project-scoped API key and interact solely through the Control Plane's HTTP endpoints. This means workers can run on entirely separate networks — the database is never exposed publicly, and all authorization logic is enforced centrally.
+</div>
+
+<h3>Directory Structure</h3>
+<div class="dir-tree">distributed-job-scheduler/
+├── backend/
+│   ├── migrations/001_init_schema.sql       # 288-line DDL: 12 tables, indexes, triggers
+│   ├── src/
+│   │   ├── server.js                        # HTTP + WebSocket bootstrap
+│   │   ├── app.js                           # Express app (middleware stack, route mounting)
+│   │   ├── config/db.js                     # PG pool, query(), withTransaction()
+│   │   ├── middleware/auth.js               # JWT + API key + RBAC
+│   │   ├── middleware/errorHandler.js        # Centralized error handling
+│   │   ├── repositories/jobRepository.js    # Atomic claim, retry/backoff logic
+│   │   ├── repositories/queueRepository.js  # Queue CRUD + stats
+│   │   ├── repositories/authRepository.js   # User/org/project persistence
+│   │   ├── routes/ (8 files)                # REST endpoints
+│   │   ├── utils/validation.js              # Zod schemas
+│   │   ├── utils/wsHub.js                   # WebSocket broadcast hub
+│   │   ├── workers/worker.js                # Standalone worker process
+│   │   └── scheduler/cronScheduler.js       # Standalone cron scheduler
+│   └── tests/ (3 test files + helpers)      # Jest + Supertest
+├── frontend/
+│   ├── index.html                           # Full SPA (auth + 5 dashboard views)
+│   ├── css/style.css                        # Dark-theme design system
+│   └── js/api.js, app.js                    # API client + UI logic
+└── docs/                                    # Architecture, ERD, API docs, Design decisions</div>
+
+<!-- ════════════════════ 3. DATABASE DESIGN ════════════════════ -->
+<h2><span class="section-num">3.</span> Database Design</h2>
+
+<h3>Schema Overview — 12 Tables</h3>
+<table>
+  <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+  <tbody>
+    <tr><td><code>organizations</code></td><td>Multi-tenant org containers</td><td>id, name, slug (unique)</td></tr>
+    <tr><td><code>users</code></td><td>Authenticated human operators</td><td>id, email (unique), password_hash, name</td></tr>
+    <tr><td><code>organization_members</code></td><td>Many-to-many with RBAC roles</td><td>org_id, user_id, role (owner/admin/member/viewer)</td></tr>
+    <tr><td><code>projects</code></td><td>Logical isolation unit, each with unique API key</td><td>id, org_id, name, api_key (unique)</td></tr>
+    <tr><td><code>retry_policies</code></td><td>Reusable retry configurations</td><td>strategy (fixed/linear/exponential), max_attempts, base_delay, multiplier</td></tr>
+    <tr><td><code>queues</code></td><td>Named job channels within a project</td><td>id, project_id, name, concurrency_limit, is_paused</td></tr>
+    <tr><td><code>jobs</code></td><td>Central entity — the unit of work</td><td>id, queue_id, status (8-state enum), priority, attempt_count, run_at, payload (JSONB), idempotency_key</td></tr>
+    <tr><td><code>workers</code></td><td>Registered worker node metadata</td><td>id, project_id, hostname, pid, status (online/offline/draining), concurrency</td></tr>
+    <tr><td><code>worker_heartbeats</code></td><td>Time-series health data (append-only)</td><td>worker_id, active_jobs, cpu_percent, memory_mb</td></tr>
+    <tr><td><code>job_executions</code></td><td>Per-attempt audit trail</td><td>job_id, worker_id, attempt_number, duration_ms, result, error_message</td></tr>
+    <tr><td><code>job_logs</code></td><td>Structured log lines per execution</td><td>job_id, execution_id, level (debug/info/warn/error), message</td></tr>
+    <tr><td><code>scheduled_jobs</code></td><td>Cron templates for recurring work</td><td>queue_id, cron_expression, timezone, next_run_at</td></tr>
+    <tr><td><code>dead_letter_queue</code></td><td>Permanently failed job snapshots</td><td>job_id, payload_snapshot, failure_reason, replayed_at</td></tr>
+    <tr><td><code>job_dependencies</code></td><td>DAG edges for workflow dependencies</td><td>job_id, depends_on_job_id (with self-reference check)</td></tr>
+  </tbody>
+</table>
+
+<h3>Indexing Strategy — 15 Indexes</h3>
+<table>
+  <thead><tr><th>Index</th><th>Type</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>idx_jobs_claim_scan</code></td><td>Partial composite</td><td><strong>Hot path.</strong> Covers the atomic claim query. Partial filter on status IN (queued, scheduled) eliminates completed jobs from the scan.</td></tr>
+    <tr><td><code>idx_jobs_status</code></td><td>B-Tree</td><td>Dashboard aggregate queries (count by status)</td></tr>
+    <tr><td><code>idx_jobs_batch</code></td><td>Partial</td><td>Batch job grouping lookups (only rows with batch_id)</td></tr>
+    <tr><td><code>idx_jobs_cron</code></td><td>Partial</td><td>Cron scheduler polling for recurring jobs</td></tr>
+    <tr><td><code>idx_scheduled_jobs_due</code></td><td>Partial</td><td>Find active cron templates that are due to fire</td></tr>
+    <tr><td><code>idx_dlq_unreplayed</code></td><td>Partial</td><td>DLQ items awaiting manual inspection</td></tr>
+    <tr><td><code>idx_heartbeats_worker_time</code></td><td>Composite DESC</td><td>Time-series heartbeat queries for dashboard charts</td></tr>
+  </tbody>
+</table>
+
+<h3>Normalization & Cascading</h3>
+<p>The schema follows <strong>3NF</strong> with one intentional denormalization: <code>jobs.attempt_count</code> mirrors what could be derived from <code>COUNT(*) FROM job_executions</code>. This avoids a join in the hot-path claim query where every millisecond of lock time matters.</p>
+<p>Foreign keys use deliberate cascade rules: <code>ON DELETE CASCADE</code> for ownership chains (org → project → queue → job), and <code>ON DELETE SET NULL</code> for soft references (e.g., claimed_by_worker_id — deleting a worker should not destroy its jobs).</p>
+
+<h3>PostgreSQL-Specific Features</h3>
+<ul>
+  <li><code>pgcrypto</code> for cryptographically random UUIDs</li>
+  <li>7 custom <code>ENUM</code> types (job_status, job_type, worker_status, org_role, retry_strategy, execution_result, log_level)</li>
+  <li><code>JSONB</code> columns for flexible payloads and worker metadata</li>
+  <li><code>TEXT[]</code> array for worker queue assignments</li>
+  <li><code>FOR UPDATE SKIP LOCKED</code> for lock-free concurrent claiming</li>
+  <li><code>ON CONFLICT DO NOTHING</code> for idempotent job creation</li>
+  <li>PL/pgSQL trigger function <code>touch_updated_at()</code> on 3 tables</li>
+</ul>
+
+<!-- ════════════════════ 4. BACKEND ENGINEERING ════════════════════ -->
+<h2><span class="section-num">4.</span> Backend Engineering</h2>
+
+<h3>Layered Architecture</h3>
+<table>
+  <thead><tr><th>Layer</th><th>Responsibility</th><th>Files</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Routes</strong></td><td>HTTP handling, input validation, response formatting</td><td>8 route files (auth, queues, jobs, workers, DLQ, schedules, retry policies, dashboard)</td></tr>
+    <tr><td><strong>Repositories</strong></td><td>All SQL queries, business logic (retry resolution, backoff)</td><td>jobRepository.js, queueRepository.js, authRepository.js</td></tr>
+    <tr><td><strong>Config/Utils</strong></td><td>DB pooling, Zod schemas, WebSocket hub</td><td>db.js, validation.js, wsHub.js, projectContext.js</td></tr>
+  </tbody>
+</table>
+
+<h3>Request Validation (Zod)</h3>
+<p>Every mutating endpoint uses Zod schemas applied as Express middleware. The middleware parses the request body, returns structured 400 errors with field-level details on failure, and attaches validated data as <code>req.validated</code>. Schemas enforce email format, minimum password length (8 chars), UUID format for all ID references, enum constraints for job types and retry strategies, and positive integer constraints for concurrency limits.</p>
+
+<h3>Security</h3>
+<ul>
+  <li><strong>Password hashing:</strong> bcryptjs with default salt rounds</li>
+  <li><strong>JWT tokens:</strong> 7-day expiry, user ID in <code>sub</code> claim</li>
+  <li><strong>API key authentication:</strong> Workers authenticate with project-scoped keys via <code>X-API-Key</code> header</li>
+  <li><strong>Helmet:</strong> Security headers (X-Frame-Options, X-Content-Type-Options, HSTS)</li>
+  <li><strong>Rate limiting:</strong> 600 requests/minute per IP via <code>express-rate-limit</code></li>
+  <li><strong>CORS:</strong> Enabled globally for cross-origin frontend access</li>
+</ul>
+
+<!-- ════════════════════ 5. RELIABILITY ════════════════════ -->
+<h2><span class="section-num">5.</span> Reliability & Concurrency</h2>
+
+<h3>The Atomic Claim Query</h3>
+<p>This is the core reliability guarantee of the system. The claim logic in <code>jobRepository.claimJobs()</code> executes inside a single PostgreSQL transaction:</p>
+
+<pre><code>-- Step 1: Lock the queue row (serializes concurrency_limit checks per queue)
+SELECT * FROM queues WHERE id = $1 FOR UPDATE
+
+-- Step 2: Count in-flight jobs to enforce concurrency_limit
+SELECT count(*)::int FROM jobs
+WHERE queue_id = $1 AND status IN ('claimed','running')
+
+-- Step 3: Claim eligible jobs — the critical line
+SELECT j.id FROM jobs j
+WHERE j.queue_id = $1
+  AND j.status IN ('queued', 'scheduled')
+  AND j.run_at <= now()
+  AND NOT EXISTS (
+    SELECT 1 FROM job_dependencies d
+    JOIN jobs dep ON dep.id = d.depends_on_job_id
+    WHERE d.job_id = j.id AND dep.status <> 'completed'
+  )
+ORDER BY j.priority DESC, j.run_at ASC, j.created_at ASC
+LIMIT $2
+FOR UPDATE SKIP LOCKED</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Why SKIP LOCKED?</div>
+  <code>FOR UPDATE SKIP LOCKED</code> means if Worker A is locking a row, Worker B silently skips it — no blocking, no waiting, no deadlocks, and absolutely no double-claiming. The queue-level lock (without SKIP LOCKED) serializes the concurrency_limit check per queue, preventing two workers from both reading "2 of 5 slots used" and each proceeding.
+</div>
+
+<h3>Retry & Backoff Computation</h3>
+<p>When a job fails, the system evaluates its retry policy:</p>
+<ul>
+  <li>If <code>attempt_count >= max_attempts</code> → permanent failure → Dead Letter Queue</li>
+  <li>Otherwise → compute backoff delay, set <code>run_at = now() + delay</code>, reset status to <code>queued</code></li>
+</ul>
+<table>
+  <thead><tr><th>Strategy</th><th>Formula</th><th>Example (base=10s, mult=2)</th></tr></thead>
+  <tbody>
+    <tr><td>Fixed</td><td><code>delay = base_delay</code></td><td>10s, 10s, 10s, …</td></tr>
+    <tr><td>Linear</td><td><code>delay = base_delay × attempt</code></td><td>10s, 20s, 30s, …</td></tr>
+    <tr><td>Exponential</td><td><code>delay = base_delay × mult^(attempt-1)</code></td><td>10s, 20s, 40s, 80s, …</td></tr>
+  </tbody>
+</table>
+<p>All strategies are capped at <code>max_delay_seconds</code> to prevent unbounded delays.</p>
+
+<h3>Worker Lifecycle</h3>
+<ol>
+  <li><strong>Registration:</strong> Worker calls <code>POST /workers/register</code> with hostname, PID, queue list, concurrency</li>
+  <li><strong>Polling:</strong> Calls <code>POST /queues/:id/claim</code> every 1 second (configurable)</li>
+  <li><strong>Execution:</strong> For each claimed job: calls <code>/start</code>, runs handler, then <code>/complete</code> or <code>/fail</code></li>
+  <li><strong>Heartbeat:</strong> Every 5 seconds, sends active job count to the API</li>
+  <li><strong>Graceful shutdown:</strong> On SIGTERM/SIGINT — stops polling, waits for in-flight jobs (15s timeout), marks offline, exits</li>
+</ol>
+
+<!-- ════════════════════ 6. FRONTEND ════════════════════ -->
+<h2><span class="section-num">6.</span> Frontend & UX</h2>
+
+<p>The dashboard is a custom-designed single-page application using vanilla HTML/CSS/JS with a dark-theme design system. Typography uses IBM Plex Mono for data and Inter for UI text. Real-time updates are delivered via WebSocket.</p>
+
+<h3>Dashboard Views</h3>
+<table>
+  <thead><tr><th>View</th><th>Features</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Overview</strong></td><td>Stat cards (Pending, Running, Completed, Dead-lettered, Online Workers), 24h throughput chart (Chart.js), live job event stream (WebSocket-fed), queue health table</td></tr>
+    <tr><td><strong>Queues</strong></td><td>Queue cards with live counts, pause/resume controls, job list with status filtering, create queue/job modals</td></tr>
+    <tr><td><strong>Workers</strong></td><td>Table: hostname, status, assigned queues, concurrency, active jobs, last seen</td></tr>
+    <tr><td><strong>Dead Letters</strong></td><td>Failed jobs with failure reason, attempt count, and one-click "Replay" button</td></tr>
+    <tr><td><strong>Recurring</strong></td><td>Cron template management with expression editor, next-run display, active/inactive toggle</td></tr>
+  </tbody>
+</table>
+
+<h3>WebSocket Real-time Events</h3>
+<p>The API broadcasts structured JSON events on every state change: <code>job.created</code>, <code>job.completed</code>, <code>job.cancelled</code>, <code>job.replayed</code>, <code>batch.created</code>, <code>worker.registered</code>, <code>worker.draining</code>, <code>worker.offline</code>. The dashboard updates stat cards, the live stream, and triggers toast notifications — all without polling.</p>
+
+<!-- ════════════════════ 7. API REFERENCE ════════════════════ -->
+<h2><span class="section-num">7.</span> API Reference</h2>
+
+<h3>Authentication</h3>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>POST</td><td><code>/api/auth/register</code></td><td>Create user account. Returns JWT + user.</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/login</code></td><td>Authenticate. Returns JWT.</td></tr>
+    <tr><td>GET</td><td><code>/api/auth/me</code></td><td>Get current user profile.</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/organizations</code></td><td>Create organization.</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/projects</code></td><td>Create project (generates API key).</td></tr>
+    <tr><td>GET</td><td><code>/api/auth/projects</code></td><td>List user's projects.</td></tr>
+  </tbody>
+</table>
+
+<h3>Queue Management</h3>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>GET</td><td><code>/api/projects/:pid/queues</code></td><td>List all queues.</td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:pid/queues</code></td><td>Create queue.</td></tr>
+    <tr><td>PATCH</td><td><code>/api/projects/:pid/queues/:qid</code></td><td>Update queue settings.</td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:pid/queues/:qid/pause</code></td><td>Pause queue.</td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:pid/queues/:qid/resume</code></td><td>Resume queue.</td></tr>
+    <tr><td>GET</td><td><code>/api/projects/:pid/queues/:qid/stats</code></td><td>Queue statistics.</td></tr>
+  </tbody>
+</table>
+
+<h3>Job Management</h3>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>GET</td><td><code>/api/projects/:pid/queues/:qid/jobs</code></td><td>List jobs (?status, ?limit, ?offset).</td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:pid/queues/:qid/jobs</code></td><td>Create job (immediate, delayed, scheduled, recurring).</td></tr>
+    <tr><td>POST</td><td><code>/api/projects/:pid/queues/:qid/jobs/batch</code></td><td>Create up to 1000 jobs with shared batch_id.</td></tr>
+    <tr><td>POST</td><td><code>…/jobs/:jid/cancel</code></td><td>Cancel queued/scheduled job.</td></tr>
+    <tr><td>POST</td><td><code>…/jobs/:jid/replay</code></td><td>Requeue dead-lettered job.</td></tr>
+    <tr><td>GET</td><td><code>…/jobs/:jid/executions</code></td><td>Execution history.</td></tr>
+    <tr><td>GET</td><td><code>…/jobs/:jid/logs</code></td><td>Structured logs.</td></tr>
+  </tbody>
+</table>
+
+<h3>Worker Coordination</h3>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>POST</td><td><code>/api/projects/:pid/workers/register</code></td><td>Register worker node.</td></tr>
+    <tr><td>POST</td><td><code>…/workers/:wid/heartbeat</code></td><td>Worker heartbeat.</td></tr>
+    <tr><td>POST</td><td><code>…/workers/:wid/drain</code></td><td>Set worker to draining.</td></tr>
+    <tr><td>POST</td><td><code>…/workers/:wid/offline</code></td><td>Mark worker offline.</td></tr>
+    <tr><td>POST</td><td><code>…/queues/:qid/claim</code></td><td><strong>Atomic claim</strong> (core endpoint).</td></tr>
+    <tr><td>POST</td><td><code>…/jobs/:jid/start</code></td><td>Transition: claimed → running.</td></tr>
+    <tr><td>POST</td><td><code>…/jobs/:jid/complete</code></td><td>Mark completed.</td></tr>
+    <tr><td>POST</td><td><code>…/jobs/:jid/fail</code></td><td>Report failure (triggers retry/DLQ).</td></tr>
+  </tbody>
+</table>
+
+<h3>Other Endpoints</h3>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>GET/POST</td><td><code>…/retry-policies</code></td><td>List / create retry policies.</td></tr>
+    <tr><td>GET/POST</td><td><code>…/scheduled-jobs</code></td><td>List / create cron schedules.</td></tr>
+    <tr><td>GET</td><td><code>…/dead-letter-queue</code></td><td>List dead-lettered jobs.</td></tr>
+    <tr><td>GET</td><td><code>…/dashboard/overview</code></td><td>Aggregate stats + 24h throughput.</td></tr>
+    <tr><td>GET</td><td><code>…/dashboard/health</code></td><td>Per-queue health metrics.</td></tr>
+    <tr><td>GET</td><td><code>/health</code></td><td>Liveness check.</td></tr>
+    <tr><td>WS</td><td><code>/ws</code></td><td>WebSocket event stream.</td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════ 8. DESIGN DECISIONS ════════════════════ -->
+<h2><span class="section-num">8.</span> Design Decisions & Trade-offs</h2>
+
+<h3>PostgreSQL as Queue Engine vs. Redis/RabbitMQ</h3>
+<p><strong>Decision:</strong> Use PostgreSQL's <code>FOR UPDATE SKIP LOCKED</code> instead of a dedicated message broker.</p>
+<p><strong>Advantages:</strong> Single data store (no state synchronization between two systems), full ACID compliance (crashed workers cannot corrupt state), simpler deployment (one fewer service to provision and monitor).</p>
+<p><strong>Disadvantages:</strong> Lower raw throughput than an in-memory broker. Postgres handles thousands of claims/second; Redis handles hundreds of thousands. Potential index bloat under sustained high load requires aggressive autovacuum tuning.</p>
+<p><strong>When I'd reach for Redis:</strong> If the system needed sub-millisecond latency, 100K+ jobs/second, or pub/sub fan-out to thousands of workers.</p>
+
+<h3>Decoupled Workers vs. In-Process Execution</h3>
+<p><strong>Decision:</strong> Workers run as separate processes that communicate exclusively via HTTP.</p>
+<p><strong>Advantages:</strong> True horizontal scaling (50 workers on 50 machines), fault isolation (worker crash doesn't affect API), security in multi-tenant scenarios (project-scoped API key authentication).</p>
+<p><strong>Disadvantages:</strong> Added network latency for every operation, operational overhead for users who must manage a separate process.</p>
+
+<h3>WebSockets vs. Polling</h3>
+<p><strong>Decision:</strong> Persistent WebSocket connection for dashboard updates rather than REST polling.</p>
+<p><strong>Advantages:</strong> Instant updates (milliseconds vs. seconds), lower database load (one broadcast vs. N polling queries).</p>
+<p><strong>Disadvantages:</strong> Stateful connections; scaling horizontally would require a Redis pub/sub backplane to sync across API instances.</p>
+
+<h3>Vanilla Frontend vs. React/Vue</h3>
+<p><strong>Decision:</strong> No framework — two JS files, no build step.</p>
+<p><strong>Rationale:</strong> The dashboard is a read-heavy monitoring tool with five views, tables, charts, and modals. A framework would add hundreds of KB of JS and a build pipeline without meaningfully improving the UX for this use case.</p>
+
+<!-- ════════════════════ 9. TESTING ════════════════════ -->
+<h2><span class="section-num">9.</span> Testing Strategy</h2>
+
+<p>The project includes <strong>13 automated tests</strong> across 3 test files, built with Jest and Supertest:</p>
+
+<h3>auth.test.js — 5 tests</h3>
+<ul>
+  <li>Registers a new user and returns a JWT (201)</li>
+  <li>Rejects duplicate email registration (409)</li>
+  <li>Rejects weak passwords at validation layer (400)</li>
+  <li>Logs in with correct credentials (200); rejects wrong password (401)</li>
+  <li>Rejects unauthenticated requests to protected routes (401)</li>
+</ul>
+
+<h3>jobLifecycle.test.js — 6 tests</h3>
+<ul>
+  <li>Creates a job in <code>queued</code> state</li>
+  <li>Idempotency key prevents duplicate creation (409)</li>
+  <li>Full happy path: claim → start → complete (with execution record verification)</li>
+  <li>Job exceeding <code>max_attempts</code> moves to Dead Letter Queue</li>
+  <li>Cancelled job cannot be claimed</li>
+  <li>Paused queue yields no claimable jobs</li>
+</ul>
+
+<h3>concurrency.test.js — 2 tests</h3>
+<div class="callout">
+  <div class="callout-title">Critical Concurrency Test</div>
+  10 workers fire <code>Promise.all</code> claim requests against 20 jobs simultaneously. The test verifies: (a) no job ID appears twice across all results, (b) all claimed IDs belong to the original set, (c) total claimed respects the queue's concurrency_limit. This proves the <code>FOR UPDATE SKIP LOCKED</code> mechanism works correctly under real concurrent load.
+</div>
+
+<!-- ════════════════════ 10. DEPLOYMENT ════════════════════ -->
+<h2><span class="section-num">10.</span> Deployment & Infrastructure</h2>
+
+<table>
+  <thead><tr><th>Component</th><th>Host</th><th>Tier</th><th>URL</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>Vercel</td><td>Free</td><td><code>distributed-job-scheduler-psi.vercel.app</code></td></tr>
+    <tr><td>Backend API + Worker</td><td>Render</td><td>Free</td><td><code>distributed-job-scheduler-x0zv.onrender.com</code></td></tr>
+    <tr><td>PostgreSQL 16</td><td>Render</td><td>Free</td><td>Internal connection only</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Worker deployment strategy:</strong> Render's free tier only supports Web Services (Background Workers cost $7/month). The Start Command is set to <code>npm run worker & npm start</code>, launching the worker as a background process alongside the API. Despite sharing a container, the architecture remains strictly decoupled — the worker communicates with the API via HTTP REST calls using the same endpoints and API key authentication it would use from a separate server. Zero code changes would be needed to move the worker to its own service.</p>
+
+<p><strong>End-to-end verification:</strong> The live deployment was tested from a smartphone over cellular data — completely disconnected from the development machine. Registration, login, job creation, and job completion all succeeded, confirming zero localhost dependency.</p>
+
+<!-- ════════════════════ 11. SETUP ════════════════════ -->
+<h2><span class="section-num">11.</span> Setup Instructions</h2>
+
+<pre><code># 1. Clone and set up the database
+git clone https://github.com/kejal2005/distributed-job-scheduler.git
+cd distributed-job-scheduler
+createdb job_scheduler
+psql -d job_scheduler -f backend/migrations/001_init_schema.sql
+
+# 2. Start the API server
+cd backend && npm install
+cp .env.example .env   # adjust PG* vars if needed
+npm start               # → http://localhost:4000
+
+# 3. Start worker(s) — run as many as you like
+PROJECT_ID=&lt;id&gt; PROJECT_API_KEY=&lt;key&gt; npm run worker
+
+# 4. Start the cron scheduler (one instance)
+npm run scheduler
+
+# 5. Open the dashboard
+cd ../frontend
+python3 -m http.server 5173   # → http://localhost:5173
+
+# 6. Run tests
+createdb job_scheduler_test
+psql -d job_scheduler_test -f backend/migrations/001_init_schema.sql
+cd backend && npm test</code></pre>
+
+<!-- ════════════════════ 12. BONUS ════════════════════ -->
+<h2><span class="section-num">12.</span> Bonus Features Implemented</h2>
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Implementation</th></tr></thead>
+  <tbody>
+    <tr><td>Workflow dependencies</td><td><span class="badge badge-green">✓ Done</span></td><td><code>job_dependencies</code> table with DAG edges. Claim query checks all deps completed via <code>NOT EXISTS</code> subquery.</td></tr>
+    <tr><td>Rate limiting</td><td><span class="badge badge-green">✓ Done</span></td><td>Global 600 req/min via <code>express-rate-limit</code>. Helmet security headers.</td></tr>
+    <tr><td>Distributed locking</td><td><span class="badge badge-green">✓ Done</span></td><td><code>FOR UPDATE SKIP LOCKED</code> for jobs. Queue-level <code>FOR UPDATE</code> for concurrency_limit.</td></tr>
+    <tr><td>Event-driven execution</td><td><span class="badge badge-green">✓ Done</span></td><td>WebSocket hub broadcasts structured JSON events on every state change.</td></tr>
+    <tr><td>WebSocket live updates</td><td><span class="badge badge-green">✓ Done</span></td><td>Dashboard receives instant updates. Live job stream, auto-updating stat cards.</td></tr>
+    <tr><td>Role-based access control</td><td><span class="badge badge-green">✓ Done</span></td><td><code>org_role</code> ENUM, <code>organization_members</code> table, <code>requireRole()</code> middleware.</td></tr>
+    <tr><td>Batch job creation</td><td><span class="badge badge-green">✓ Done</span></td><td><code>POST /jobs/batch</code> creates up to 1000 jobs with shared <code>batch_id</code>.</td></tr>
+    <tr><td>Idempotent submission</td><td><span class="badge badge-green">✓ Done</span></td><td>Unique constraint on <code>(queue_id, idempotency_key)</code> with <code>ON CONFLICT DO NOTHING</code>.</td></tr>
+    <tr><td>Configurable retry strategies</td><td><span class="badge badge-green">✓ Done</span></td><td>Fixed, linear, exponential backoff with per-policy base_delay, max_delay, multiplier.</td></tr>
+    <tr><td>Queue pause/resume</td><td><span class="badge badge-green">✓ Done</span></td><td><code>is_paused</code> flag checked atomically inside the claim transaction.</td></tr>
+    <tr><td>Graceful worker shutdown</td><td><span class="badge badge-green">✓ Done</span></td><td>SIGTERM/SIGINT handlers drain in-flight jobs, mark offline, then exit.</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

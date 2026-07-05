@@ -59,19 +59,37 @@ $all('.auth-tab').forEach((tab) => {
 $('#login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('#login-error').textContent = '';
+  const btn = $('#login-form button[type="submit"]');
+  const originalText = btn.textContent;
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
   try {
     const { user, token } = await Api.login($('#login-email').value, $('#login-password').value);
     onAuthed(user, token);
-  } catch (err) { $('#login-error').textContent = err.message; }
+  } catch (err) { 
+    $('#login-error').textContent = err.message; 
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
 $('#register-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('#register-error').textContent = '';
+  const btn = $('#register-form button[type="submit"]');
+  const originalText = btn.textContent;
+  btn.textContent = 'Creating account...';
+  btn.disabled = true;
   try {
     const { user, token } = await Api.register($('#register-email').value, $('#register-password').value, $('#register-name').value);
     onAuthed(user, token);
-  } catch (err) { $('#register-error').textContent = err.message; }
+  } catch (err) { 
+    $('#register-error').textContent = err.message; 
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
 $('#logout-btn').addEventListener('click', () => {
